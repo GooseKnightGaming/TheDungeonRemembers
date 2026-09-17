@@ -32,7 +32,14 @@ body.touch #s-title>*{flex-shrink:0}
 @media (max-height:520px){body.touch #t-logo{width:auto;height:30vh;max-width:70vw}body.touch #s-title{gap:10px}}
 /* Outside the map screens a phone does not need the D-PAD switch or the log strip. */
 body.touch:not(.onmap) #touch-toggle{display:none}
-body.touch.on-title #persistent-log-panel{display:none}
+body.touch.on-title #persistent-log-panel,body.touch.on-manual #persistent-log-panel{display:none}
+/* The manual on a phone: the page scrolls inside the box; the header and
+   the Skip / Back / Next row stay put. */
+body.touch #s-tutorial{padding:8px 0;box-sizing:border-box}
+body.touch #s-tutorial{height:100dvh}
+body.touch #s-tutorial>div{max-height:calc(100dvh - 16px);box-sizing:border-box;padding:12px 14px!important;gap:8px!important}
+body.touch #s-tutorial>div>div:not(#tut-body){flex-shrink:0}
+body.touch #tut-body{flex:1 1 auto;min-height:0!important;overflow-y:auto;overscroll-behavior:contain;padding-right:4px}
 @keyframes pulse{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
 .t-main{font-size:48px;font-weight:bold;color:#cc2222;text-shadow:0 0 24px #cc222266;letter-spacing:4px;text-align:center}
 .t-sub{font-size:28px;color:#882222;letter-spacing:6px;text-align:center}
@@ -12671,10 +12678,12 @@ function renderTitle(){
 const TUTORIAL_PAGES=[
   {title:'Touch Controls',touchOnly:true,html:
     `There is no D-pad cluttering the screen. <b>The map is the stick.</b><br><br>
-    <b style="color:#88ccaa">Drag anywhere on the map</b> - a stick appears under your thumb, wherever you put it. Hold a direction and you keep walking. Let go and it vanishes.<br><br>
+    <b style="color:#88ccaa">Drag anywhere on the map</b> - a stick appears under your thumb, wherever you put it. A short flick is one step; hold the direction and you keep walking. Let go and it vanishes.<br><br>
     <b style="color:#88ccaa">Tap a tile</b> to take one step toward it. Tap a tile right next to you with something on it to attack. Tap <i>your own tile</i> to interact with whatever you're standing on.<br><br>
-    The buttons bottom-right are only ever the ones you can actually use right now - a bow button appears when you carry a bow, a CLIMB button appears when you're stood at a ladder. <span class="kh">\u22EF</span> opens the rest.<br><br>
-    Prefer arrows? <span class="kh">\u25A3 D-PAD</span> top-right brings back a classic 8-way pad.`},
+    Your character always shows which way they're facing - attacks and some spells only work that way. <span class="kh">\u21B6 TURN</span> and <span class="kh">TURN \u21B7</span> turn you on the spot without stepping.<br><br>
+    In the dungeon, the buttons at the side are only ever the ones you can use right now - a CLIMB button appears when you're stood at a ladder. <span class="kh">\u22EF</span> opens the rest: bag, orders, wait, leave. In town and in buildings, the buttons beside the map do the same jobs.<br><br>
+    Prefer arrows? The <span class="kh">\u25A3 D-PAD</span> switch brings back a classic 8-way pad.<br><br>
+    Best played with the phone on its side.`},
   {title:'Traps',html:
     `Not everything down there is alive.<br><br>
     <b style="color:#ff6622">Vents</b> fire on a fixed rhythm - fire or wind, on and off, whether or not you're watching. Count the beats and cross on the off-beat.<br><br>
@@ -12686,7 +12695,7 @@ const TUTORIAL_PAGES=[
     `The dungeon takes turns, but <b>not everything takes the same amount of time</b>.<br><br>
     A rat is twice your speed and will get two moves to your one. A cave troll is slower and will sometimes miss its chance entirely. A dagger swings quickly; a war hammer is slow enough that everything around you gets most of an extra turn while you wind up.<br><br>
     So you still get to stop and think - but standing in a doorway swinging something heavy at a swarm of rats will go badly, and that is the point.`},
-  {title:'Moving Around',html:
+  {title:'Moving Around',keysOnly:true,html:
     `Town, dungeon, and building interiors all use the same controls:<br><br>
     <span class="kh">WASD</span> or arrow keys to move &nbsp; <span class="kh">Q</span>/<span class="kh">E</span> to turn on the spot without stepping<br>
     <span class="kh">Space</span> to interact with whatever's in front of you - stairs, doors, items, NPCs, chests<br>
@@ -12790,16 +12799,27 @@ function openTutorial(){
 // Touch-only pages are skipped on desktop and vice versa.
 function tutorialPages(){
   const touch=document.body.classList.contains('touch');
-  return TUTORIAL_PAGES.filter(p=>!p.touchOnly||touch);
+  return TUTORIAL_PAGES.filter(p=>touch?!p.keysOnly:!p.touchOnly);
 }
 function renderTutorialPage(){
   const pages=tutorialPages();
   if(tutorialPage>=pages.length)tutorialPage=pages.length-1;
   const p=pages[tutorialPage];
-  document.getElementById('tut-body').innerHTML='<div style="color:#88ccff;font-size:13px;margin-bottom:8px">'+p.title+'</div>'+p.html;
+  const touch=document.body.classList.contains('touch');
+  document.getElementById('tut-body').innerHTML='<div style="color:#88ccff;font-size:13px;margin-bottom:8px">'+p.title+'</div>'+(touch?touchManual(p.html):p.html);
+  document.getElementById('tut-body').scrollTop=0;
   document.getElementById('tut-page-count').textContent=(tutorialPage+1)+' / '+pages.length;
   document.getElementById('btn-tut-back').style.visibility=tutorialPage===0?'hidden':'visible';
   document.getElementById('btn-tut-next').textContent=tutorialPage===pages.length-1?'Got it →':'Next →';
+}
+// On a phone the key badges name the buttons that do the same job.
+const MANUAL_TOUCH_KEYS={'Space':'USE','Enter':'ATTACK','I':'\u22EF BAG','Esc':'\u22EF LEAVE','Q':'\u21B6 TURN','E':'TURN \u21B7',
+  'F':'\uD83C\uDFF9 slot','Z':'\u2728 slot','C':'\u22EF ORDERS','L':'\u22EF LADDER','J':'\u22EF JUMP','1':'slot 1','2':'slot 2',
+  '3':'slot 3','4':'slot 4','5':'slot 5','1-5':'slots','X':'PANIC','WASD':'drag / D-pad','Shift':'\uD83D\uDEE1 slot 4'};
+function touchManual(html){
+  return String(html).replace(/<span class="kh">([^<]{1,8})<\/span>/g,function(m,k){
+    return MANUAL_TOUCH_KEYS[k]?'<span class="kh">'+MANUAL_TOUCH_KEYS[k]+'</span>':m;
+  });
 }
 function finishTutorial(){
   G.tutorialSeen=true;
@@ -13162,6 +13182,7 @@ document.addEventListener('DOMContentLoaded',()=>{
      document.body.classList.toggle('sidecol',isTouch&&(a==='s-town'||a==='s-interior'));
      document.body.classList.toggle('onmap',isTouch&&onMap);
      document.body.classList.toggle('on-title',isTouch&&a==='s-title');
+     document.body.classList.toggle('on-manual',isTouch&&a==='s-tutorial');
      document.body.style.setProperty('--pad-gutter',(isTouch&&_padOn&&onMap)?'166px':'0px');
      document.body.classList.toggle('thumbs',thumbs);
      document.body.classList.toggle('thumbs-hb',withHb);
