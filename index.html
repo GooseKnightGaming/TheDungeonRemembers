@@ -27,6 +27,19 @@ body{background:#0a0a0a;color:#ccc;font-family:'Courier New',monospace;font-size
 .t-skull{font-size:56px;animation:pulse 3s ease-in-out infinite}
 #t-logo{width:min(420px,82vw);height:auto;image-rendering:pixelated;image-rendering:crisp-edges;display:block}
 @media (max-height:640px){#t-logo{width:min(300px,70vw)}}
+body.touch #s-title{overflow-y:auto;justify-content:safe center;padding:10px 0 16px}
+body.touch #s-title>*{flex-shrink:0}
+@media (max-height:520px){body.touch #t-logo{width:auto;height:30vh;max-width:70vw}body.touch #s-title{gap:10px}}
+/* Outside the map screens a phone does not need the D-PAD switch or the log strip. */
+body.touch:not(.onmap) #touch-toggle{display:none}
+body.touch.on-title #persistent-log-panel,body.touch.on-manual #persistent-log-panel{display:none}
+/* The manual on a phone: the page scrolls inside the box; the header and
+   the Skip / Back / Next row stay put. */
+body.touch #s-tutorial{padding:8px 0;box-sizing:border-box}
+body.touch #s-tutorial{height:100dvh}
+body.touch #s-tutorial>div{max-height:calc(100dvh - 16px);box-sizing:border-box;padding:12px 14px!important;gap:8px!important}
+body.touch #s-tutorial>div>div:not(#tut-body){flex-shrink:0}
+body.touch #tut-body{flex:1 1 auto;min-height:0!important;overflow-y:auto;overscroll-behavior:contain;padding-right:4px}
 @keyframes pulse{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
 .t-main{font-size:48px;font-weight:bold;color:#cc2222;text-shadow:0 0 24px #cc222266;letter-spacing:4px;text-align:center}
 .t-sub{font-size:28px;color:#882222;letter-spacing:6px;text-align:center}
@@ -265,6 +278,8 @@ body.touch #touch-acts.show{display:grid}
 .ta-b:disabled,.ta-b.off{opacity:.3}
 .ta-b .lbl{position:absolute;bottom:3px;left:0;right:0;font-size:7px;color:#667;letter-spacing:1px}
 .ta-b.primary{border-color:#5a2222}
+.ta-b.small{height:38px;font-size:15px}
+.ta-b.small .lbl{bottom:1px}
 /* expandable tray of secondary actions */
 #touch-more{display:none;position:fixed;z-index:70;right:8px;
   bottom:calc(140px + env(safe-area-inset-bottom,0px));
@@ -282,6 +297,50 @@ body.touch #town-action-bar,body.touch #int-action-bar{overflow-x:auto;flex-wrap
 /* Log panel is a tap-to-expand drawer on phones rather than a fixed band. */
 body.touch #persistent-log-panel{height:46px;cursor:pointer}
 body.touch #persistent-log-panel.tall{height:40vh;flex-direction:column}
+/* ══ PHONE LAYOUT FIXES (v18.3) - touch screens only ═════════════════════ */
+/* Keyboard hints mean nothing on a phone. */
+body.touch .kb-hints,body.touch .hb-s .hb-n,body.touch .abtn .sub,body.touch #h-fennick-hint .kh{display:none!important}
+/* The visible height, not the height behind the browser's address bar. */
+body.touch{height:100dvh}
+/* Whenever the thumb controls are up, they get a strip of their own at the
+   bottom (portrait), so they never sit on the log, the status or the map. */
+body.touch.thumbs{box-sizing:border-box}
+body.touch.thumbs:not(.thumbs-hb) #touch-acts,
+body.touch.thumbs:not(.thumbs-hb) #touch-pad{bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+body.touch.thumbs:not(.thumbs-hb) #touch-more{bottom:calc(134px + env(safe-area-inset-bottom,0px))}
+@media (orientation:portrait){
+  body.touch.thumbs{padding-bottom:calc(var(--dock-h,190px) + env(safe-area-inset-bottom,0px))}
+  /* The town map is 45 x 29 tiles: give it a strip of that shape, full width. */
+  body.touch #s-town #town-wrap{flex:none;height:calc(100vw * 29 / 45);max-height:48vh}
+}
+/* Landscape has no height to spare: the controls float over the map's lower
+   corners (never the middle, where you are), above a slimmer log. */
+@media (orientation:landscape){
+  body.touch.thumbs #persistent-log-panel{height:32px}
+  body.touch.thumbs #persistent-log-panel.tall{height:60vh}
+  body.touch.thumbs #hotbar{bottom:calc(38px + env(safe-area-inset-bottom,0px))}
+  body.touch.thumbs #touch-acts,body.touch.thumbs #touch-pad{bottom:calc(38px + env(safe-area-inset-bottom,0px))!important}
+  body.touch.thumbs #touch-more{bottom:calc(164px + env(safe-area-inset-bottom,0px))!important}
+  body.touch.thumbs #g-hud{padding-top:1px;padding-bottom:1px;row-gap:0}
+  /* Dungeon: the pads get side margins of their own, so the map is never under them. */
+  body.touch.thumbs-hb #g-layout{margin-right:134px;margin-left:var(--pad-gutter,0px)}
+  /* Town and buildings: map on the left clear of the D-pad; buttons and the
+     info panel in a column on the right, clear of both pads. */
+  body.touch.sidecol #s-town.active,body.touch.sidecol #s-interior.active{display:grid!important;
+    grid-template-columns:minmax(0,1fr) var(--side-w,290px);grid-template-rows:auto auto minmax(0,1fr)}
+  body.touch.sidecol #s-town>div:first-child,body.touch.sidecol #s-interior>div:first-child{display:contents!important}
+  body.touch.sidecol #int-hud{grid-column:1 / span 2;grid-row:1}
+  body.touch.sidecol #town-wrap{grid-column:1;grid-row:1 / span 3;min-height:0}
+  body.touch.sidecol #int-wrap{grid-column:1;grid-row:2 / span 2;min-height:0}
+  body.touch.sidecol #town-action-bar,body.touch.sidecol #int-action-bar{grid-column:2;grid-row:2;flex-wrap:wrap}
+  body.touch.sidecol #s-town #town-action-bar{grid-row:1}
+  body.touch.sidecol #town-panel,body.touch.sidecol #int-panel{grid-column:2;grid-row:3;width:auto;max-height:none;min-height:0;overflow-y:auto}
+  body.touch.sidecol #s-town #town-panel{grid-row:2 / span 2}
+      body.touch.sidecol #touch-toggle{right:auto;left:8px}
+  body.touch.sidecol #town-wrap,body.touch.sidecol #int-wrap{margin-left:var(--pad-gutter,0px)}
+}
+/* The D-PAD switch sits top-right; keep the status bars clear of it. */
+body.touch #g-hud,body.touch #int-hud{padding-right:76px!important}
 /* ══ RESPONSIVE / PHONE LAYOUT ═══════════════════════════════════════════ */
 @media (max-width:760px),(pointer:coarse){
   body{flex-direction:column;font-size:12px}
@@ -349,6 +408,14 @@ body.rtl #boss-banner *,body.rtl #s-bestiary :not(input),body.rtl #s-tutorial :n
 #splash .sp-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 #splash #sp-anim{width:min(460px,86vw);height:auto;image-rendering:pixelated;image-rendering:crisp-edges;display:block}
 #splash .sp-pres{color:#5a564e;font-size:10px;letter-spacing:5px}
+/* Short screens (a phone on its side): the pictures shrink to fit and the
+   hint joins the flow under them instead of floating over "PRESENTS". */
+@media (max-height:520px){
+  #splash{gap:8px}
+  #splash #sp-anim{width:auto;height:min(275px,58vh);max-width:86vw}
+  #splash #sp-tdr{width:auto;height:min(333px,66vh);max-width:90vw}
+  #splash .sp-hint{position:static;margin-top:4px}
+}
 #splash .sp-t1{color:#cc1a1a;font-size:46px;font-weight:bold;letter-spacing:6px;text-align:center;
   text-shadow:0 0 28px #ff000055}
 #splash .sp-t2{color:#8a1414;font-size:30px;letter-spacing:12px;text-align:center}
@@ -452,7 +519,7 @@ body.phosphor #app-main,body.phosphor #persistent-log-panel{
       <div class="pt">✨ SPELLS</div>
       <div id="tp-spelllist" style="font-size:10px;color:#66aaff;line-height:1.8"></div>
     </div>
-    <div class="ps" style="font-size:9px;color:#444;line-height:1.9">
+    <div class="ps kb-hints" style="font-size:9px;color:#444;line-height:1.9">
       <span class="kh">WASD</span> Move<br>
       <span class="kh">Q/E</span> Turn<br>
       <span class="kh">Space</span> Interact<br>
@@ -472,7 +539,7 @@ body.phosphor #app-main,body.phosphor #persistent-log-panel{
         <span style="color:#556;margin-left:6px">Hunger</span> <span id="int-hunger" style="color:#ff8800">—</span><span class="hud-bar-mini"><span class="hud-bar-mini-fill" id="int-hunger-bar" style="background:#ff8800"></span></span>
       </span>
       <span id="int-training-gear" style="display:none;color:#88ff88;margin-left:10px"></span>
-      <span style="margin-left:10px;color:#444">
+      <span class="kb-hints" style="margin-left:10px;color:#444">
         <span class="kh">WASD</span> move &nbsp; <span class="kh">Q/E</span> turn &nbsp; <span class="kh">Space</span> attack/interact &nbsp; <span class="kh">F</span> bow &nbsp; <span class="kh">Z</span> cast &nbsp; <span class="kh">I</span> inventory &nbsp; walk through doorway or <span class="kh">Esc</span> to leave
       </span>
     </div>
@@ -537,6 +604,8 @@ body.phosphor #app-main,body.phosphor #persistent-log-panel{
   <div class="ta-b" data-act="leave">&#8617;<span class="lbl">LEAVE</span></div>
 </div>
 <div id="touch-acts">
+  <div class="ta-b small" data-act="turnl">&#8630;<span class="lbl">TURN</span></div>
+  <div class="ta-b small" data-act="turnr">&#8631;<span class="lbl">TURN</span></div>
   <div class="ta-b primary" data-act="attack">&#9876;<span class="lbl">ATTACK</span></div>
   <div class="ta-b" data-act="shield">&#128737;<span class="lbl">SHIELD</span></div>
   <div class="ta-b" data-act="fire">&#127993;<span class="lbl">FIRE</span></div>
@@ -591,7 +660,7 @@ body.phosphor #app-main,body.phosphor #persistent-log-panel{
     <span id="h-fennick-hint" style="display:none;color:#88ccff;font-size:10px">
       <span class="kh">X</span> Panic Wipe &amp; Flee
     </span>
-    <span style="margin-left:auto;color:#333;font-size:10px">
+    <span class="kb-hints" style="margin-left:auto;color:#333;font-size:10px">
       <span class="kh">1-5</span> hotbar &nbsp;
       <span class="kh">Enter</span> use slot &nbsp;
       <span class="kh">WASD</span> move &nbsp;
@@ -2187,6 +2256,95 @@ function renderShell(text){
   } else if(S.phase!=='pick'){
     gameButton(box,'Skip to the end','btn-dk',function(){shellFinishShuffle();});
   }
+}
+// Panels built elsewhere carry "[I]"-style key labels in their buttons.
+function stripKeyLabels(root){
+  if(!root||!document.body.classList.contains('touch'))return;
+  const re=/\s*\[(?:[A-Z0-9](?:\/[A-Z0-9])?|Esc|Enter|Space|Tab)\]/g;
+  const tw=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+  const fix=[];while(tw.nextNode()){if(re.test(tw.currentNode.nodeValue))fix.push(tw.currentNode);re.lastIndex=0;}
+  fix.forEach(function(n){n.nodeValue=n.nodeValue.replace(re,'');});
+}
+(function(){
+  if(typeof MutationObserver!=='function')return;
+  ['town-panel','int-panel','int-btns'].forEach(function(id){
+    const el=document.getElementById(id);if(!el)return;
+    stripKeyLabels(el);
+    new MutationObserver(function(){stripKeyLabels(el);}).observe(el,{childList:true,characterData:true,subtree:true});
+  });
+})();
+// Building messages are set in many places; tidy them for touch as they land.
+(function(){
+  if(typeof MutationObserver!=='function')return;
+  ['int-msg','int-npc'].forEach(function(id){
+    const el=document.getElementById(id);if(!el)return;
+    new MutationObserver(function(){
+      const t=el.textContent,n=touchText(t);
+      if(n!==t)el.textContent=n;
+    }).observe(el,{childList:true,characterData:true,subtree:true});
+  });
+})();
+// ── TURN SIDEWAYS ────────────────────────────────────────────────────────────
+// The game plays best in landscape on a phone. Once per session (unless told
+// never to), a phone held upright is offered a rotation. Chrome on Android can
+// do it for real: full screen, then an orientation lock. Elsewhere it just asks.
+let _landHintShown=false;
+function isPortraitPhone(){
+  return document.body.classList.contains('touch')&&typeof window.matchMedia==='function'
+    &&window.matchMedia('(orientation: portrait)').matches;
+}
+function canRotateForYou(){
+  return !!(document.documentElement.requestFullscreen&&window.screen&&screen.orientation&&screen.orientation.lock);
+}
+const ROTATE_IMG='data:image/png;base64,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';
+let _landHintDone=null;
+function closeLandHint(){
+  const o=document.getElementById('land-overlay');if(o)o.remove();
+  const cb=_landHintDone;_landHintDone=null;if(cb)cb();
+}
+function maybeSuggestLandscape(){
+  if(_landHintShown||!isPortraitPhone())return;
+  if(document.querySelector('body > [id$="-overlay"]'))return;
+  showLandHint(null);
+}
+// Before anything else on a phone held upright - even the GooseKnight intro.
+function landHintBeforeSplash(go){
+  const touchy=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+  const portrait=typeof window.matchMedia==='function'&&window.matchMedia('(orientation: portrait)').matches;
+  let never=false;try{never=!!localStorage.getItem('tdr2_nolandhint');}catch(e){}
+  if(!touchy||!portrait||never||/jsdom/i.test(navigator.userAgent||'')){go();return;}
+  showLandHint(go);
+}
+function showLandHint(onDone){
+  try{if(localStorage.getItem('tdr2_nolandhint')){if(onDone)onDone();return;}}catch(e){}
+  _landHintShown=true;
+  _landHintDone=onDone||null;
+  const ov=document.createElement('div');ov.id='land-overlay';
+  ov.style.cssText='position:fixed;inset:0;z-index:450;background:#000000f0;display:flex;align-items:center;justify-content:center;padding:18px;overflow-y:auto';
+  const box=document.createElement('div');
+  box.style.cssText='background:#0b0e14;border:1px solid #2a3348;padding:16px;max-width:320px;width:100%;text-align:center';
+  box.innerHTML='<img id="land-img" alt="Rotate your phone for the best experience" src="'+ROTATE_IMG+'" '
+    +'style="width:100%;max-width:300px;height:auto;image-rendering:pixelated;display:block;margin:0 auto 6px">'
+    +'<span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">TURN IT SIDEWAYS</span>'
+    +'<div style="color:#99a;font-size:11px;line-height:1.6">A bigger map, and the controls out of the way.</div>';
+  const btn=function(label,cls,fn){const b=document.createElement('button');b.className='btn '+cls;
+    b.style.cssText='display:block;width:100%;font-size:12px;padding:9px;margin-top:8px';b.textContent=label;
+    b.onclick=function(ev){ev.stopPropagation();fn();};box.appendChild(b);return b;};
+  if(canRotateForYou())btn('\u21BB Rotate for me','btn-blue',function(){rotateForYou();});
+  btn(canRotateForYou()?'Not now':'OK','btn-grey',closeLandHint);
+  btn("Don't ask again",'btn-dk',function(){try{localStorage.setItem('tdr2_nolandhint','1');}catch(e){}closeLandHint();});
+  ov.appendChild(box);document.body.appendChild(ov);
+}
+function rotateForYou(){
+  closeLandHint();
+  try{
+    document.documentElement.requestFullscreen({navigationUI:'hide'})
+      .then(function(){return screen.orientation.lock('landscape');})
+      .catch(function(){glog('Your browser would not rotate the game - turn the phone sideways instead.','#88aacc');});
+  }catch(e){glog('Turn the phone sideways for the best view.','#88aacc');}
+}
+if(typeof window.matchMedia==='function'){
+  try{window.matchMedia('(orientation: portrait)').addEventListener('change',function(e){if(!e.matches)closeLandHint();});}catch(e){}
 }
 // ── v16: SPAWNS ──────────────────────────────────────────────────────────────
 // Extra creatures, each with its own depth band, added on top of the classic
@@ -4848,7 +5006,12 @@ function loadMeta(){
 }
 function delSave(){localStorage.removeItem('tdr2');G.hasSave=false;}
 // LOG
-function glog(t,c){c=c||'#aaa';G.log.unshift({t:t,c:c});if(G.log.length>80)G.log.pop();const el=document.getElementById('msg-log');if(el)el.innerHTML=G.log.slice(0,40).map(function(m){return'<div class="msg" style="color:'+m.c+'">'+esc(m.t)+'</div>';}).join('');}
+function touchText(t){
+  if(typeof t!=='string'||!document.body.classList.contains('touch'))return t;
+  return t.replace(/\[(Space|SPACE)\]/g,'[USE]').replace(/\[(Esc|ESC)\]/g,'[BACK]').replace(/\[(Shift|SHIFT)\]/g,'[GUARD]')
+          .replace(/\s*\[(?:[A-Z0-9](?:\/[A-Z0-9])?|Enter|Tab)\]/g,'').replace(/\s*\((?:Esc|Enter)[^)]*\)/g,'');
+}
+function glog(t,c){t=touchText(t);c=c||'#aaa';G.log.unshift({t:t,c:c});if(G.log.length>80)G.log.pop();const el=document.getElementById('msg-log');if(el)el.innerHTML=G.log.slice(0,40).map(function(m){return'<div class="msg" style="color:'+m.c+'">'+esc(m.t)+'</div>';}).join('');}
 // GAME FLOW
 function newGame(){
   clearFloorCache();
@@ -11323,16 +11486,16 @@ function dismissSplash(){
   setHint();
   window.addEventListener('focus',setHint);
   setTimeout(setHint,300);
-  startSplashAnim();
+  landHintBeforeSplash(startSplashAnim);
   // Capture phase on window: runs before every other key handler, so the
   // keypress that dismisses the splash does nothing else.
   window.addEventListener('keydown',function(e){
-    if(!splashActive())return;
+    if(!splashActive()||document.getElementById('land-overlay'))return;
     e.preventDefault();e.stopImmediatePropagation();
     if(e.repeat)return;
     advanceSplash();
   },true);
-  s.addEventListener('pointerdown',function(e){e.preventDefault();e.stopPropagation();advanceSplash();});
+  s.addEventListener('pointerdown',function(e){e.preventDefault();e.stopPropagation();if(!document.getElementById('land-overlay'))advanceSplash();});
 })();
 // ── CREDITS & THE COFFEE LINK ────────────────────────────────────────────────
 // The tip jar ("Buy me a cuppa", title screen). Shown on the web build only:
@@ -11423,7 +11586,7 @@ function renderTP(){
   document.getElementById('tp-hp').textContent=`HP: ${G.player.hp}/${G.player.maxHp}`;
   document.getElementById('tp-hpf').style.width=`${(G.player.hp/G.player.maxHp)*100}%`;
   document.getElementById('tp-gold').textContent=`🪙 ${G.player.gold} gold`;
-  document.getElementById('town-msg').textContent=TS.msg;
+  document.getElementById('town-msg').textContent=touchText(TS.msg);
   document.getElementById('btn-continue').style.display=(G.hasPausedRun&&G.floor)?'block':'none';
   const sb=G.player.spellbook;
   document.getElementById('tp-spells').style.display=sb.length?'block':'none';
@@ -11791,6 +11954,8 @@ function gameBottomInset(canvas){
       const r=el.getBoundingClientRect();
       if(!r.height||r.top>=cr.bottom||r.bottom<=cr.top)return;
       if(r.right<=cr.left||r.left>=cr.right)return;
+      const mid=cr.left+cr.width/2;
+      if(r.right<mid-CELL*1.5||r.left>mid+CELL*1.5)return;   // side pads never cover you
       inset=Math.max(inset,cr.bottom-r.top);
     });
     return Math.min(inset,cr.height*0.6);
@@ -12424,6 +12589,7 @@ function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('s-'+id).classList.add('active');
   setTimeout(function(){try{updateMusicMood();}catch(e){}},0);
+  if(id==='town'||id==='game'){setTimeout(maybeSuggestLandscape,500);}
   if(id==='town'){setTimeout(()=>{renderTown();renderTP();},30);}
   if(id==='game'){setTimeout(()=>{renderGame();renderHUD();},30);}
   if(id==='inv'){selIdx=-1;document.getElementById('btn-use').style.display='none';document.getElementById('btn-drop').style.display='none';document.getElementById('btn-quick').style.display='none';renderInv();}
@@ -12512,10 +12678,12 @@ function renderTitle(){
 const TUTORIAL_PAGES=[
   {title:'Touch Controls',touchOnly:true,html:
     `There is no D-pad cluttering the screen. <b>The map is the stick.</b><br><br>
-    <b style="color:#88ccaa">Drag anywhere on the map</b> - a stick appears under your thumb, wherever you put it. Hold a direction and you keep walking. Let go and it vanishes.<br><br>
+    <b style="color:#88ccaa">Drag anywhere on the map</b> - a stick appears under your thumb, wherever you put it. A short flick is one step; hold the direction and you keep walking. Let go and it vanishes.<br><br>
     <b style="color:#88ccaa">Tap a tile</b> to take one step toward it. Tap a tile right next to you with something on it to attack. Tap <i>your own tile</i> to interact with whatever you're standing on.<br><br>
-    The buttons bottom-right are only ever the ones you can actually use right now - a bow button appears when you carry a bow, a CLIMB button appears when you're stood at a ladder. <span class="kh">\u22EF</span> opens the rest.<br><br>
-    Prefer arrows? <span class="kh">\u25A3 D-PAD</span> top-right brings back a classic 8-way pad.`},
+    Your character always shows which way they're facing - attacks and some spells only work that way. <span class="kh">\u21B6 TURN</span> and <span class="kh">TURN \u21B7</span> turn you on the spot without stepping.<br><br>
+    In the dungeon, the buttons at the side are only ever the ones you can use right now - a CLIMB button appears when you're stood at a ladder. <span class="kh">\u22EF</span> opens the rest: bag, orders, wait, leave. In town and in buildings, the buttons beside the map do the same jobs.<br><br>
+    Prefer arrows? The <span class="kh">\u25A3 D-PAD</span> switch brings back a classic 8-way pad.<br><br>
+    Best played with the phone on its side.`},
   {title:'Traps',html:
     `Not everything down there is alive.<br><br>
     <b style="color:#ff6622">Vents</b> fire on a fixed rhythm - fire or wind, on and off, whether or not you're watching. Count the beats and cross on the off-beat.<br><br>
@@ -12527,7 +12695,7 @@ const TUTORIAL_PAGES=[
     `The dungeon takes turns, but <b>not everything takes the same amount of time</b>.<br><br>
     A rat is twice your speed and will get two moves to your one. A cave troll is slower and will sometimes miss its chance entirely. A dagger swings quickly; a war hammer is slow enough that everything around you gets most of an extra turn while you wind up.<br><br>
     So you still get to stop and think - but standing in a doorway swinging something heavy at a swarm of rats will go badly, and that is the point.`},
-  {title:'Moving Around',html:
+  {title:'Moving Around',keysOnly:true,html:
     `Town, dungeon, and building interiors all use the same controls:<br><br>
     <span class="kh">WASD</span> or arrow keys to move &nbsp; <span class="kh">Q</span>/<span class="kh">E</span> to turn on the spot without stepping<br>
     <span class="kh">Space</span> to interact with whatever's in front of you - stairs, doors, items, NPCs, chests<br>
@@ -12631,16 +12799,27 @@ function openTutorial(){
 // Touch-only pages are skipped on desktop and vice versa.
 function tutorialPages(){
   const touch=document.body.classList.contains('touch');
-  return TUTORIAL_PAGES.filter(p=>!p.touchOnly||touch);
+  return TUTORIAL_PAGES.filter(p=>touch?!p.keysOnly:!p.touchOnly);
 }
 function renderTutorialPage(){
   const pages=tutorialPages();
   if(tutorialPage>=pages.length)tutorialPage=pages.length-1;
   const p=pages[tutorialPage];
-  document.getElementById('tut-body').innerHTML='<div style="color:#88ccff;font-size:13px;margin-bottom:8px">'+p.title+'</div>'+p.html;
+  const touch=document.body.classList.contains('touch');
+  document.getElementById('tut-body').innerHTML='<div style="color:#88ccff;font-size:13px;margin-bottom:8px">'+p.title+'</div>'+(touch?touchManual(p.html):p.html);
+  document.getElementById('tut-body').scrollTop=0;
   document.getElementById('tut-page-count').textContent=(tutorialPage+1)+' / '+pages.length;
   document.getElementById('btn-tut-back').style.visibility=tutorialPage===0?'hidden':'visible';
   document.getElementById('btn-tut-next').textContent=tutorialPage===pages.length-1?'Got it →':'Next →';
+}
+// On a phone the key badges name the buttons that do the same job.
+const MANUAL_TOUCH_KEYS={'Space':'USE','Enter':'ATTACK','I':'\u22EF BAG','Esc':'\u22EF LEAVE','Q':'\u21B6 TURN','E':'TURN \u21B7',
+  'F':'\uD83C\uDFF9 slot','Z':'\u2728 slot','C':'\u22EF ORDERS','L':'\u22EF LADDER','J':'\u22EF JUMP','1':'slot 1','2':'slot 2',
+  '3':'slot 3','4':'slot 4','5':'slot 5','1-5':'slots','X':'PANIC','WASD':'drag / D-pad','Shift':'\uD83D\uDEE1 slot 4'};
+function touchManual(html){
+  return String(html).replace(/<span class="kh">([^<]{1,8})<\/span>/g,function(m,k){
+    return MANUAL_TOUCH_KEYS[k]?'<span class="kh">'+MANUAL_TOUCH_KEYS[k]+'</span>':m;
+  });
 }
 function finishTutorial(){
   G.tutorialSeen=true;
@@ -12717,6 +12896,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     ['confirm-overlay', function(){const n=document.getElementById('confirm-no');if(n)n.onclick();else closeConfirm();}],
     ['trainer-overlay', function(){closeTrainer();}],
     ['awards-overlay',  function(){closeAwards();}],
+    ['land-overlay',    function(){closeLandHint();}],
     ['dice-overlay',    function(){diceLeave();}],
     ['shell-overlay',   function(){closeShellGame();}],
     ['skin-overlay',    function(){closeSkinPicker();}],
@@ -12975,6 +13155,8 @@ document.addEventListener('DOMContentLoaded',()=>{
         const sub=el&&el.dataset.ctxact;
         if(sub==='jump')jumpOff(false); else if(sub==='ladder')climbLadder();
         break;}
+      case'turnl':  if(a==='s-game')rotatePlayer(-1); break;
+      case'turnr':  if(a==='s-game')rotatePlayer(1); break;
       case'more':
         $('touch-more').classList.toggle('show');
         return;   // toggling the tray is not a game action
@@ -12990,7 +13172,27 @@ document.addEventListener('DOMContentLoaded',()=>{
     const onMap=(a==='s-game'||a==='s-town'||a==='s-interior');
     const pad=$('touch-pad'),acts=$('touch-acts');
     if(pad)pad.classList.toggle('show',_padOn&&onMap);
-    if(acts)acts.classList.toggle('show',onMap);
+    // Town and buildings already have ENTER/USE, turn, BAG (and in buildings
+    // ATTACK, fire, cast, LEAVE) as buttons, so the thumb cluster is dungeon-only.
+    if(acts)acts.classList.toggle('show',a==='s-game');
+    if(a!=='s-game'){const mo=$('touch-more');if(mo)mo.classList.remove('show');}
+    // Reserve room for the thumb controls (touch only; desktop never gets these classes).
+    {const isTouch=document.body.classList.contains('touch');
+     const thumbs=isTouch&&(a==='s-game'||(_padOn&&onMap)),withHb=isTouch&&a==='s-game';
+     document.body.classList.toggle('sidecol',isTouch&&(a==='s-town'||a==='s-interior'));
+     document.body.classList.toggle('onmap',isTouch&&onMap);
+     document.body.classList.toggle('on-title',isTouch&&a==='s-title');
+     document.body.classList.toggle('on-manual',isTouch&&a==='s-tutorial');
+     document.body.style.setProperty('--pad-gutter',(isTouch&&_padOn&&onMap)?'166px':'0px');
+     document.body.classList.toggle('thumbs',thumbs);
+     document.body.classList.toggle('thumbs-hb',withHb);
+     const padH=(_padOn&&onMap)?150:0,actsH=a==='s-game'?(acts?Math.max(118,acts.offsetHeight||0):118):0;
+     document.body.style.setProperty('--dock-h',((withHb?66:8)+Math.max(padH,actsH)+6)+'px');
+     if(isTouch&&onMap){setTimeout(function(){
+       const x=activeScreen();
+       if(x==='s-game')renderGame();else if(x==='s-town')renderTown();
+       else if(x==='s-interior'&&typeof currentIntKey!=='undefined'&&currentIntKey)renderIntCanvas(currentIntKey==='k'?'WEIRD_HOUSE':((INTERIORS[currentIntKey]&&INTERIORS[currentIntKey].type)||'DEFAULT'));
+     },40);}}
     const hb=$('hotbar');
     if(hb){
       const touch=document.body.classList.contains('touch');
@@ -13012,7 +13214,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   // while you hold it. Tap = act on the tile you touched: your own tile
   // interacts, an adjacent tile is a step (or a swing, if something's on it),
   // anything further is one step toward it.
-  const STICK_DEAD=26, STICK_MS=170, TAP_MS=320, TAP_SLOP=14;
+  // A drag takes one step as soon as it commits, then waits before repeating
+  // (like a held key), so a short flick is exactly one step. Turning the
+  // stick to a new direction steps at once. v18.5: was a flat 170 ms repeat.
+  const STICK_DEAD=30, STICK_FIRST_MS=420, STICK_MS=220, TAP_MS=320, TAP_SLOP=14;
   let _g=null;
   function stickDir(dx,dy){
     const m=Math.max(Math.abs(dx),Math.abs(dy));
@@ -13034,18 +13239,32 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(!t){actAny('interact');return;}
     const dx=t.x-pos.x,dy=t.y-pos.y;
     if(dx===0&&dy===0){actAny('interact');return;}
-    moveAny(Math.sign(dx),Math.sign(dy));
+    // Aim by angle, favouring straight lines: a tile three across and one
+    // down is "right", not "down-right".
+    const d=tapDir(dx,dy);
+    moveAny(d.x,d.y);
   }
+  function tapDir(dx,dy){
+    if(Math.max(Math.abs(dx),Math.abs(dy))<=1)return{x:dx,y:dy};   // a neighbour: exactly that tile
+    const m=Math.max(Math.abs(dx),Math.abs(dy)),t=m*0.5;
+    return{x:Math.abs(dx)<t?0:Math.sign(dx),y:Math.abs(dy)<t?0:Math.sign(dy)};
+  }
+  window.tapDir=tapDir;
+  function stickTick(){
+    if(!_g)return;
+    const d=stickDir(_g.x-_g.x0,_g.y-_g.y0);
+    if(!d){_g.dir=null;return;}
+    const now=Date.now();
+    const changed=!_g.dir||_g.dir.x!==d.x||_g.dir.y!==d.y;
+    if(changed){_g.dir=d;_g.moved=true;_g.next=now+STICK_FIRST_MS;moveAny(d.x,d.y);return;}
+    if(now>=_g.next){_g.next=now+STICK_MS;moveAny(d.x,d.y);}
+  }
+  window.stickTick=stickTick;
+  window._gestureState=function(v){if(v!==undefined)_g=v;return _g;};
   function gestureStart(e){
     const p=e.touches?e.touches[0]:e;
-    _g={x0:p.clientX,y0:p.clientY,x:p.clientX,y:p.clientY,t0:Date.now(),moved:false,timer:null};
-    _g.timer=setInterval(()=>{
-      if(!_g)return;
-      const d=stickDir(_g.x-_g.x0,_g.y-_g.y0);
-      if(!d)return;
-      _g.moved=true;
-      moveAny(d.x,d.y);
-    },STICK_MS);
+    _g={x0:p.clientX,y0:p.clientY,x:p.clientX,y:p.clientY,t0:Date.now(),moved:false,timer:null,dir:null,next:0};
+    _g.timer=setInterval(stickTick,50);
   }
   function gestureMove(e){
     if(!_g)return;
@@ -13054,7 +13273,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     const dx=_g.x-_g.x0,dy=_g.y-_g.y0;
     const d=stickDir(dx,dy);
     if(d){
-      if(!_g.moved){_g.moved=true;moveAny(d.x,d.y);}   // respond on the first commit
+      stickTick();   // a first commit (or a change of direction) steps at once
       const m=Math.min(32,Math.hypot(dx,dy));const a2=Math.atan2(dy,dx);
       stickShow(_g.x0,_g.y0,Math.cos(a2)*m,Math.sin(a2)*m);
     }
