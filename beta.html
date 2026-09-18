@@ -383,7 +383,7 @@ input{-webkit-user-select:text;user-select:text}
 #btn-cuppa{background:#151515;border:1px solid #4a3a20;color:#d0a050;font-family:inherit;
   font-size:9px;padding:4px 9px;cursor:pointer;letter-spacing:1px;text-decoration:none;align-items:center}
 #btn-cuppa:hover{border-color:#8a6a30;color:#f0c070}
-/* SDRAWKCABB. Mirrors the text without mirroring the map, because a mirrored
+/* SDRAWKCAB. Mirrors the text without mirroring the map, because a mirrored
    map is unplayable rather than funny. */
 /* unicode-bidi is NOT inherited, so setting it on a container only reverses
    text sitting directly in that container. The log's lines, the inventory's
@@ -423,13 +423,13 @@ body.rtl #boss-banner *,body.rtl #s-bestiary :not(input),body.rtl #s-tutorial :n
   animation:pulse 2.4s ease-in-out infinite}
 @keyframes spIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (max-width:520px){#splash .sp-t1{font-size:30px}#splash .sp-t2{font-size:20px;letter-spacing:8px}}
-/* BLACKWHITE and SEPIATONED, in the same family as NOSTALGIAS. */
+/* BLACKWHITE and SEPIATONED, in the same family as NOSTALGIC. */
 body.bw #app-main,body.bw #persistent-log-panel{filter:grayscale(1) contrast(1.12)}
 body.sepia #app-main,body.sepia #persistent-log-panel{filter:sepia(.92) contrast(1.05) brightness(.95)}
 /* Any menu open: the hotbar and touch controls get out of the way. */
 body.menu-open #hotbar,body.menu-open #touch-acts,body.menu-open #touch-pad,
 body.menu-open #stick,body.menu-open #touch-more,body.menu-open #touch-toggle{display:none!important}
-/* NOSTALGIAS. An old phosphor monitor, applied to the whole app. */
+/* NOSTALGIC. An old phosphor monitor, applied to the whole app. */
 body.phosphor #app-main,body.phosphor #persistent-log-panel{
   filter:grayscale(1) sepia(1) hue-rotate(65deg) saturate(3.2) contrast(1.15)}
 </style>
@@ -5105,14 +5105,20 @@ function profileSpawnWeights(types){
     return Math.max(0.35,w);
   });
 }
+// RODENTLESS swaps anything rat-shaped for a Gelkin, whatever asked for it.
+const RAT_KIN=['RAT','PLAGUE_RAT'];
+function ratSwap(t){
+  if(CHEATS.RODENTLESS&&ET.GELKIN&&RAT_KIN.indexOf(t)>=0)return 'GELKIN';
+  return t;
+}
 function profilePickType(types){
   if(!types||!types.length)return null;
-  if(CHEATS.EVERYRATSS&&ET.RAT)return 'RAT';
+  if(CHEATS.EVERYRAT&&ET.RAT)return ratSwap('RAT');
   const w=profileSpawnWeights(types);
   let total=0;w.forEach(function(v){total+=v;});
   let r=Math.random()*total;
-  for(let i=0;i<types.length;i++){r-=w[i];if(r<=0)return types[i];}
-  return types[types.length-1];
+  for(let i=0;i<types.length;i++){r-=w[i];if(r<=0)return ratSwap(types[i]);}
+  return ratSwap(types[types.length-1]);
 }
 // Rushers get longer floors. Capped by the same constant as everything else.
 function profileLayoutNudge(base){
@@ -5225,7 +5231,7 @@ function enterFloor(n,runeReturn,arriveAt){
     glog('\u2014 '+LP.name+' \u2014 '+LP.blurb,'#8899bb');
   }
   if(hollowFor(n))glog('\u2620 Something is standing on this floor that has your face.','#aa88cc');
-  if(CHEATS.TELLMEHOWW)setTimeout(function(){
+  if(CHEATS.TELLMEHOW)setTimeout(function(){
     try{puzzleHintLines().forEach(function(l){glog('\u261E '+l,'#88ccaa');});}catch(e){}},0);
   if(G.floor.isMB)glog('⚠ Miniboss floor. A heavy silence.','#cc4444');
   if(G.floor.campfirePos)glog('\uD83D\uDD25 A campfire burns on this floor — full rest, spells recharged. Bearing in the NAVIGATION panel.','#ff8844');
@@ -5423,7 +5429,7 @@ function isLadderTop(x,y){
 // reduced by: 1 per 3 DEF, 0 if Feather Fall spell active
 // minimum 1 unless player has relevant skill/spell
 function calcFallDmg(entity){
-  // FEATHERFALL is the lesser cousin of RUBBERBOOT: halved, not cancelled.
+  // FEATHERSL is the lesser cousin of RUBBERBOOT: halved, not cancelled.
   // RUBBERBOOT: the player lands soft no matter how far the drop. Enemies
   // get no such courtesy.
   if(entity===G.player&&CHEATS.RUBBERBOOT)return 0;
@@ -5431,7 +5437,7 @@ function calcFallDmg(entity){
   const base=3+Math.floor(floor/3);
   const def=entity.def!==undefined?entity.def:(entity.defense||0);
   let reduced=Math.max(1, base - Math.floor(def/3));
-  if(entity===G.player&&LESSER_FLAGS.FEATHERFALL)reduced=Math.max(1,Math.floor(reduced/2));
+  if(entity===G.player&&LESSER_FLAGS.FEATHERSL)reduced=Math.max(1,Math.floor(reduced/2));
   return reduced;
 }
 // Electrical resistance, applied to damage the player takes with a LIGHTNING
@@ -8128,20 +8134,20 @@ const LESSER_CODES={
   MONOCHROME:{kind:'garb',val:'MONO',  msg:'Black and white. As though something drained the colour out of you.'},
   // — time of day —
   FIRSTLIGHT:{kind:'clock',val:'DAWN', msg:'Dawn. The town is only just waking up.'},
-  HIGHNOONNN:{kind:'clock',val:'DAY',  msg:'Full daylight. Everyone is awake and open for business.'},
+  HIGHNOON:{kind:'clock',val:'DAY',  msg:'Full daylight. Everyone is awake and open for business.'},
   LONGSHADOW:{kind:'clock',val:'DUSK', msg:'Dusk. The shutters start going up around now.'},
   WITCHHOURS:{kind:'clock',val:'NIGHT',msg:'Night. The town sleeps; the abandoned building does not.'},
-  SLOWSUNDIA:{kind:'dayscale',val:2,   msg:'The day now takes forty minutes instead of twenty.'},
-  FASTSUNDIA:{kind:'dayscale',val:0.5, msg:'The day now takes ten minutes. Blink and it is night.'},
-  TRUESUNDIA:{kind:'dayscale',val:1,   msg:'The day is back to its proper twenty minutes.'},
+  SLOSUNDIAL:{kind:'dayscale',val:2,   msg:'The day now takes forty minutes instead of twenty.'},
+  FASSUNDIAL:{kind:'dayscale',val:0.5, msg:'The day now takes ten minutes. Blink and it is night.'},
+  TRUSUNDIAL:{kind:'dayscale',val:1,   msg:'The day is back to its proper twenty minutes.'},
   // — small, genuinely useful —
   CANDLEWICK:{kind:'flag',val:'FARSIGHT',  msg:'You can see two tiles further in the dark.'},
   POCKETFULL:{kind:'flag',val:'BIGBAG',    msg:'Your bag holds twenty-six things instead of twenty.'},
   WHETSTONES:{kind:'flag',val:'SLOWWEAR',  msg:'Your gear wears out half as fast.'},
-  SOFTSOLESS:{kind:'flag',val:'QUIETSTEP', msg:'You make half as much noise as you used to.'},
-  KEENERSENS:{kind:'flag',val:'TRAPSENSE', msg:'You notice traps a good deal sooner.'},
+  SOFTSOLES:{kind:'flag',val:'QUIETSTEP', msg:'You make half as much noise as you used to.'},
+  KEENSENSE:{kind:'flag',val:'TRAPSENSE', msg:'You notice traps a good deal sooner.'},
   IRONGUTTED:{kind:'flag',val:'IRONGUT',   msg:'Food does twice as much for you.'},
-  FEATHERFAL:{kind:'flag',val:'FEATHERFALL',msg:'Falls hurt half as much. Not nothing, just half.'},
+  FEATHERS:{kind:'flag',val:'FEATHERSL',msg:'Falls hurt half as much. Not nothing, just half.'},
   // — trades: something for something —
   GLASSCANON:{kind:'flag',val:'GLASSCANNON',msg:'You deal double damage. You also take it.'},
   THINGRUELL:{kind:'flag',val:'THINGRUEL',  msg:'You hit harder on an empty stomach, and you empty it twice as fast.'},
@@ -8150,7 +8156,7 @@ const LESSER_CODES={
 // Flags are kept apart from the old all-powerful CHEATS so the chair can list
 // them separately - and so RESETITALL can clear one set without the other.
 const LESSER_FLAGS={FARSIGHT:false,BIGBAG:false,SLOWWEAR:false,QUIETSTEP:false,TRAPSENSE:false,
-  IRONGUT:false,FEATHERFALL:false,GLASSCANNON:false,THINGRUEL:false,LANTERNOUT:false};
+  IRONGUT:false,FEATHERSL:false,GLASSCANNON:false,THINGRUEL:false,LANTERNOUT:false};
 const LESSER_DESC={
   FARSIGHT:'Your sight reaches further than it should.',
   BIGBAG:'You are carrying more than that bag can hold.',
@@ -8158,7 +8164,7 @@ const LESSER_DESC={
   QUIETSTEP:'You move more quietly than you used to.',
   TRAPSENSE:'You notice the floor before you stand on it.',
   IRONGUT:'Food goes further in you than it should.',
-  FEATHERFALL:'You land lighter than your weight suggests.',
+  FEATHERSL:'You land lighter than your weight suggests.',
   GLASSCANNON:'You hit twice as hard, and everything hits you twice as hard back.',
   THINGRUEL:'Hunger sharpens you, and comes for you faster.',
   LANTERNOUT:'You see less. Less sees you.',
@@ -8205,14 +8211,15 @@ const CHEATS={
   SHIELDWALL:false,  // allies cannot be killed
   LONGTHROAT:false,  // every floor generates as a Deep Passage
   PUZZLEMENT:false,  // every floor carries a puzzle, cycling the families
-  EVERYRATSS:false,  // every ordinary spawn is a Rat
+  EVERYRAT:false,  // every ordinary spawn is a Rat
+  RODENTLESS:false,  // rats and their kin come out as Gelkin instead
   PACIFISTIC:false,  // nothing attacks you
   NAMEDDREAD:false,  // every enemy gets an absurd honorific
   SUREFINGER:false,  // disarming never fails (stepping on one still springs it)
   GOODHABITS:false,  // ally traits are always perks
   ILLTEMPERD:false,  // ally traits are always drawbacks
   FASTFRIEND:false,  // traits arrive at 2 and 5 floors instead of 10 and 25
-  TELLMEHOWW:false,  // the log explains whatever the floor is asking
+  TELLMEHOW:false,  // the log explains whatever the floor is asking
   KEPTREVENA:false,  // the Revenant is available at the Guild
   BACKWARDSS:false,  // right-to-left text
   GREENSCREE:false,  // old phosphor palette
@@ -8239,14 +8246,15 @@ const EFFECT_DESC={
   SHIELDWALL:'Your companions do not fall.',
   LONGTHROAT:'The rooms have stopped happening.',
   PUZZLEMENT:'Every floor has something on it that wants solving.',
-  EVERYRATSS:'It is rats. It is all rats.',
+  EVERYRAT:'It is rats. It is all rats.',
+  RODENTLESS:'Nothing scurries. Something oozes instead.',
   PACIFISTIC:'Nothing down here will raise a hand to you.',
   NAMEDDREAD:'Everything has given itself a title.',
   SUREFINGER:'Your hands never slip on a mechanism.',
   GOODHABITS:'Your companions only pick up good habits.',
   ILLTEMPERD:'Your companions only pick up bad ones.',
   FASTFRIEND:'Your companions become themselves very quickly.',
-  TELLMEHOWW:'Something explains each floor to you as you arrive.',
+  TELLMEHOW:'Something explains each floor to you as you arrive.',
   KEPTREVENA:'The Guild will let you take a Revenant down with you.',
   BACKWARDSS:'.sdrawkcab si gnihtyrevE',
   GREENSCREE:'Everything is the colour of an old monitor.',
@@ -8397,10 +8405,10 @@ function applyCheat(code){
     case 'SIXTEENHUE':
       openWardrobe();
       return '\u2713 SIXTEENHUE — sixteen colours, a build, and a livery for the company.';
-    case 'MANATARMSS':
+    case 'MANATARMS':
       G_build=(G_build==='MASC')?'NEUTRAL':'MASC';
       saveG();repaintAll();
-      return '\u2713 MANATARMSS \u2014 '+(G_build==='MASC'?'a broader build, the same armour.':'back to neutral.');
+      return '\u2713 MANATARMS \u2014 '+(G_build==='MASC'?'a broader build, the same armour.':'back to neutral.');
     case 'SHIELDMAID':
       G_build=(G_build==='FEM')?'NEUTRAL':'FEM';
       saveG();repaintAll();
@@ -8410,12 +8418,12 @@ function applyCheat(code){
       saveG();repaintAll();
       return G_rainbow?'\u2713 RAINBOWWAY — all of them, in order, forever.'
                       :'\u2713 RAINBOWWAY — off.';
-    case 'KEEPTHEDED':
+    case 'KEEPDEAD':
       CHEATS.KEPTREVENA=!CHEATS.KEPTREVENA;
       saveG();
       return CHEATS.KEPTREVENA
-        ? '\u2713 KEEPTHEDED — one of them did not want to stay down. The Guild will hand it over.'
-        : '\u2713 KEEPTHEDED — the Revenant goes back to being a rumour.';
+        ? '\u2713 KEEPDEAD — one of them did not want to stay down. The Guild will hand it over.'
+        : '\u2713 KEEPDEAD — the Revenant goes back to being a rumour.';
     case 'SUREFINGER':
       CHEATS.SUREFINGER=!CHEATS.SUREFINGER;
       return CHEATS.SUREFINGER
@@ -8433,17 +8441,20 @@ function applyCheat(code){
     case 'WEARTHEIRS':
       openDisguisePicker();
       return '\u2713 WEARTHEIRS — pick a face.';
-    case 'TELLMEHOWW':
-      CHEATS.TELLMEHOWW=!CHEATS.TELLMEHOWW;
-      if(CHEATS.TELLMEHOWW&&G.floor)puzzleHintLines().forEach(function(l){glog('\u261E '+l,'#88ccaa');});
-      return '\u2713 TELLMEHOWW — '+(CHEATS.TELLMEHOWW?'each floor will explain itself.':'you are on your own again.');
+    case 'TELLMEHOW':
+      CHEATS.TELLMEHOW=!CHEATS.TELLMEHOW;
+      if(CHEATS.TELLMEHOW&&G.floor)puzzleHintLines().forEach(function(l){glog('\u261E '+l,'#88ccaa');});
+      return '\u2713 TELLMEHOW — '+(CHEATS.TELLMEHOW?'each floor will explain itself.':'you are on your own again.');
+    case 'RODENTLESS':
+      CHEATS.RODENTLESS=!CHEATS.RODENTLESS;
+      return '\u2713 RODENTLESS — '+(CHEATS.RODENTLESS?'rats and their kin turn up as Gelkin.':'the rats are back.');
     case 'FORTYWINKS':
       return summonBed();
-    case 'SDRAWKCABB':
+    case 'SDRAWKCAB':
       CHEATS.BACKWARDSS=!CHEATS.BACKWARDSS;
       document.body.classList.toggle('rtl',CHEATS.BACKWARDSS);
-      return CHEATS.BACKWARDSS?'\u2713 SDRAWKCABB — .yaw rehto eht sklaw txet ehT'
-                              :'\u2713 SDRAWKCABB — text reads forwards again.';
+      return CHEATS.BACKWARDSS?'\u2713 SDRAWKCAB — .yaw rehto eht sklaw txet ehT'
+                              :'\u2713 SDRAWKCAB — text reads forwards again.';
     case 'PILGRIMWAY':
       CHEATS.PILGRIMWAY=!CHEATS.PILGRIMWAY;
       return '\u2713 PILGRIMWAY \u2014 '+(CHEATS.PILGRIMWAY?'in the woods, the navigation panel points to the shrine or the hermit.':'you will have to find them yourself.');
@@ -8478,12 +8489,12 @@ function applyCheat(code){
     case 'STARKNAKED':
       G_outfit=G_outfit==='BARE'?'NORMAL':'BARE';saveG();repaintAll();
       return '\u2713 STARKNAKED \u2014 '+(G_outfit==='BARE'?'spelunking in your birthday suit. You are pixelated anyway.':'dressed again.');
-    case 'SKINTONESS':
+    case 'SKINTONES':
       openSkinPicker();
-      return '\u2713 SKINTONESS \u2014 pick a skin tone.';
-    case 'NOSTALGIAS':
+      return '\u2713 SKINTONES \u2014 pick a skin tone.';
+    case 'NOSTALGIC':
       setVisualFilter(CHEATS.GREENSCREE?null:'GREENSCREE');
-      return '\u2713 NOSTALGIAS — '+(CHEATS.GREENSCREE?'everything is the colour of an old monitor.':'colour restored.');
+      return '\u2713 NOSTALGIC — '+(CHEATS.GREENSCREE?'everything is the colour of an old monitor.':'colour restored.');
     case 'TRADEROUTE':
       CHEATS.TRADEROUTE=!CHEATS.TRADEROUTE;
       if(typeof clearFloorCache==='function')clearFloorCache();
@@ -8571,10 +8582,10 @@ function applyCheat(code){
         });
       return '… SILENCEALL — the chair waits for your answer.';
     }
-    case 'EVERYRATSS':
-      CHEATS.EVERYRATSS=!CHEATS.EVERYRATSS;
-      return CHEATS.EVERYRATSS?'✓ EVERYRATSS — it is rats now. It is all rats.'
-                              :'✓ EVERYRATSS — the other things may return.';
+    case 'EVERYRAT':
+      CHEATS.EVERYRAT=!CHEATS.EVERYRAT;
+      return CHEATS.EVERYRAT?'✓ EVERYRAT — it is rats now. It is all rats.'
+                              :'✓ EVERYRAT — the other things may return.';
     case 'PACIFISTIC':
       CHEATS.PACIFISTIC=!CHEATS.PACIFISTIC;
       return CHEATS.PACIFISTIC?'✓ PACIFISTIC — nothing will raise a hand to you.'
@@ -10900,7 +10911,7 @@ function guildPanel(){
   }
   return document.getElementById('guild-panel');
 }
-// The Revenant is hidden until KEEPTHEDED has been found.
+// The Revenant is hidden until KEEPDEAD has been found.
 function allyTypeAvailable(t){
   return !(ALLY_TYPES[t]||{}).secret||CHEATS.KEPTREVENA;
 }
