@@ -2208,9 +2208,51 @@ function canDetect(e,p,fd){
   if(e.type==='SHADOW')return true;
   return !!(fd.tiles[p.pos.y]&&fd.tiles[p.pos.y][p.pos.x]&&fd.tiles[p.pos.y][p.pos.x].vis);
 }
+// ── Campfire safety (Rhys): monsters meet an invisible wall 5 tiles out from a
+//    campfire. Only their bodies - spells, arrows and other ranged attacks still
+//    cross it. A monster already inside (it should not happen) may leave.
+const CAMP_SAFE_R=5;
+function campfiresOf(fd){
+  if(!fd||!fd.tiles)return [];
+  if(fd._fires&&fd._fires.tiles===fd.tiles)return fd._fires.list;
+  const list=[];
+  for(let y=0;y<fd.tiles.length;y++)for(let x=0;x<(fd.tiles[y]||[]).length;x++){
+    const t=fd.tiles[y][x];if(t&&t.type&&t.type.campfire)list.push({x:x,y:y});
+  }
+  fd._fires={tiles:fd.tiles,list:list};
+  return list;
+}
+function inCampSafety(fd,x,y){
+  return campfiresOf(fd).some(function(c){const dx=x-c.x,dy=y-c.y;return dx*dx+dy*dy<=CAMP_SAFE_R*CAMP_SAFE_R;});
+}
+// May this monster step onto (x,y)? Not into the ring from outside it.
+function campBars(fd,e,x,y){
+  if(!fd||!e||!fd.enemies||fd.enemies.indexOf(e)<0)return false;
+  return inCampSafety(fd,x,y)&&!inCampSafety(fd,e.pos.x,e.pos.y);
+}
+// Anything that ends up inside the ring is set down just outside it.
+function evictFromCampSafety(fl){
+  if(!campfiresOf(fl).length)return fl;
+  (fl.enemies||[]).forEach(function(e){
+    if(!e.alive||!inCampSafety(fl,e.pos.x,e.pos.y))return;
+    for(let r=1;r<=CAMP_SAFE_R*3;r++){
+      let done=false;
+      for(let dy=-r;dy<=r&&!done;dy++)for(let dx=-r;dx<=r&&!done;dx++){
+        if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;
+        const x=e.pos.x+dx,y=e.pos.y+dy,t=fl.tiles[y]&&fl.tiles[y][x];
+        if(!t||!t.type.w||t.type.abExit||t.type===TSD||t.type===TSU||inCampSafety(fl,x,y))continue;
+        if(fl.enemies.some(function(o){return o!==e&&o.alive&&o.pos.x===x&&o.pos.y===y;}))continue;
+        e.pos={x:x,y:y};e.elevated=false;done=true;
+      }
+      if(done)break;
+    }
+  });
+  return fl;
+}
 function canOcc(pos,fd,self){
   if(pos.y<0||pos.y>=DH||pos.x<0||pos.x>=DW)return false;
   if(!fd.tiles[pos.y][pos.x].type.w)return false;
+  if(campBars(fd,self,pos.x,pos.y))return false;
   // Allies (and you) are solid: a monster cannot walk through them, which is
   // what makes an ally standing in the way worth attacking.
   if(fd===G.floor){
@@ -2544,6 +2586,7 @@ function shadowWalkable(x,y){
 }
 function shadowBlockedAt(e,x,y){
   if(x<0||y<0||x>=DW||y>=DH)return true;
+  if(campBars(G.floor,e,x,y))return true;
   if(G.player.pos.x===x&&G.player.pos.y===y)return true;
   if(G.floor.enemies.some(function(o){return o!==e&&o.alive&&o.pos.x===x&&o.pos.y===y;}))return true;
   if(G.allies.some(function(a){return a.alive&&a.pos&&a.pos.x===x&&a.pos.y===y;}))return true;
@@ -3323,7 +3366,7 @@ function bossSpecials(e,fd){
         const spots=[];
         fd.arena.tiles.forEach(function(k){
           const parts=k.split(','),x=+parts[0],y=+parts[1];
-          if(Math.abs(x-p.pos.x)+Math.abs(y-p.pos.y)>=4)spots.push({x:x,y:y});
+          if(Math.abs(x-p.pos.x)+Math.abs(y-p.pos.y)>=4&&!inCampSafety(fd,x,y))spots.push({x:x,y:y});
         });
         if(spots.length){
           e.pos=R.pick(spots);
@@ -5606,7 +5649,7 @@ function enemyMezAI(e,fd){
         // 60% chance a smart enemy will take the opportunity to climb
         const topTaken=(G.player.elevated&&G.player.pos.x===mez.ladderTop.x&&G.player.pos.y===mez.ladderTop.y)
           ||fd.enemies.some(function(o){return o!==e&&o.alive&&o.elevated&&o.pos.x===mez.ladderTop.x&&o.pos.y===mez.ladderTop.y;});
-        if(!topTaken&&Math.random()<0.6){
+        if(!topTaken&&!campBars(fd,e,mez.ladderTop.x,mez.ladderTop.y)&&Math.random()<0.6){
           e.elevated=true;
           e.pos={x:mez.ladderTop.x,y:mez.ladderTop.y};
           glog(ename(e)+' climbs up to the mezzanine.','#ffaa44');
@@ -5650,6 +5693,7 @@ function applyKnockback(target, fromPos, force){
     if(np.x<0||np.x>=DW||np.y<0||np.y>=DH)break;
     const tile=G.floor.tiles[np.y][np.x];
     if(!tile||!tile.type.w)break;
+    if(campBars(G.floor,target,np.x,np.y))break;    // a monster stops at the campfire's ring
     // Whoever is behind is shoved back a square; if they cannot move, the
     // knockback stops here.
     if(!shoveOccupant(G.floor,np.x,np.y,dx,dy,target))break;
@@ -5921,6 +5965,7 @@ function nearestFreeTile(fl,from,maxR){
 // After generation: nothing may start inside furniture (a brazier placed on
 // top of a monster was the usual culprit - found by the soak test).
 function settleFloorOccupants(fl){
+  evictFromCampSafety(fl);
   (fl.enemies||[]).forEach(function(e){
     if(!e.alive)return;
     const t=fl.tiles[e.pos.y]&&fl.tiles[e.pos.y][e.pos.x];
@@ -5959,6 +6004,7 @@ function shoveOccupant(fd,x,y,dx,dy,mover){
   const ghost=occ!==G.player&&isGhost(occ);
   if(!bt||(!bt.type.w&&!ghost))return false;
   if(occupantAt(fd,bx,by,occ,elev))return false;
+  if(campBars(fd,occ,bx,by))return false;
   occ.pos={x:bx,y:by};
   const seen=(fd.tiles[y][x]&&fd.tiles[y][x].vis)||bt.vis;
   if(seen)glog((occ===G.player?'You are':(G.allies.indexOf(occ)>=0?occ.name:ename(occ))+' is')+' shoved back a step.','#88ccdd');
