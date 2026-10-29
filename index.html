@@ -3724,7 +3724,6 @@ function moveP(dx,dy){
 const GUARD_SHIELD_TAKE=0.4, GUARD_BRACE_TAKE=0.6;   // share of the blow that still lands
 function hasShieldEquipped(){return !!(G.player.offhand&&G.player.offhand.dur>0);}
 function isTwoHandedWeapon(){return !!(G.player.weapon&&G.player.weapon.length>1);} // Spears, etc
-function _unusedStanceMarker(){}
 function shieldStanceLabel(){
   if(hasShieldEquipped())return'Shield raised';
   if(isTwoHandedWeapon())return'Braced (two-handed weapon)';
@@ -5415,8 +5414,7 @@ function genFloor(fn,forceLayout,_retry){
     if(!lock&&!_retry)return genFloor(fn,'ROOMS',true);
   }
   if(!lock&&fn>=4&&!puzzle){
-    if(false){
-    } else if(R.pct(30)){
+    if(R.pct(30)){
       lock=placeLockedRoom(tiles,rooms,fn,'SAME');
       if(lock){
         // Its key goes somewhere on this floor, away from the door.
@@ -8605,7 +8603,6 @@ const CHEATS={
 };
 const CHEATS_DEFAULT=JSON.parse(JSON.stringify(CHEATS));   // for RESETSTART
 let _puzzleForce=0;
-const CHEAT_ITEMS={};  // track special items given by cheats
 
 // ▸ Floor jumping (testing)
 // Walking to floor 150 to check one guardian is not a reasonable ask, so the
@@ -10549,7 +10546,6 @@ function attackStatue(statue, ctx){
 // Assigned once per session, persisted until midnight reset.
 // alignment randomly assigned: 60% INERT, 15% GOOD, 15% EVIL, 10% HOSTILE
 // BUT: in the dungeon proper, GOOD must be encountered before EVIL (tracked by G.dungeonGoodStatueSeen)
-const _statueRuntimeCtx='ABANDONED'; // context key for abandoned house statues
 let _statueInstances={}; // id -> {alignment, hp, maxHp, dmg:[min,max], name, inscription, revealed, pos}
 function getOrInitStatue(id, label, ctx){
   if(_statueInstances[id])return _statueInstances[id];
@@ -12793,7 +12789,6 @@ function renderHUD(){
   const w=p.weapon,r=p.ranged;
   const arr=r?.arrows!==undefined?`↑${r.arrows}`:'';
   document.getElementById('h-wep').textContent=(w?`[1]${w.name}[${w.dur}] `:'[1]— ')+(r?`[2]${r.name}${arr}[${r.dur}]`:'[2]—');
-  const SE_SHOCK_NOTE=1;
 const SE={POISONED:'☠',BURN:'🔥',FREEZE:'❄',VERTIGO:'💫',DISORIENT:'😵',
   WET:'💧',CORRUPT:'⚫',SHOCK:'⚡',DARKENED:'🌑'};
   document.getElementById('h-stat').textContent=p.status.map(s=>SE[s.type]||'').join('');
